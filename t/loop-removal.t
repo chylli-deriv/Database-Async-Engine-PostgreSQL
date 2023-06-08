@@ -23,10 +23,12 @@ my $uri = URI->new('postgresql://example@127.0.0.1:5000/empty?password=example-p
 async sub cleanup_ok {
     test_noleaks(
         code => sub {
+            note "print something";
             (async sub {
                 $loop->add(
                     my $instance = Database::Async->new(
-                        uri => $uri
+                        uri => $uri,
+                        engine => {connection_timeout => 0.1}
                     )
                 );
 
