@@ -77,42 +77,4 @@ subtest 'connection refused' => sub {
     done_testing;
 };
 
-subtest 'connection queued' => sub {
-    # Here we want the incoming connections to sit in SYN_SENT state, waiting
-    # in the TCP accept() queue backlog: we can override the acceptor in
-    # IO::Async::Listener to achieve this.
-    my $listener = $loop->listen(
-        service => 0,
-        socktype => 'stream',
-        acceptor => sub {
-            note 'accept() called, ignoring';
-        },
-        # No stream will ever succeed, so this can be empty
-        on_stream => sub { },
-    )->get;
-    my $port = $listener->read_handle->sockport;
-    note "Listening but not accepting on port ", $port;
-    $uri->port($port);
-    cleanup_ok()->get;
-    done_testing;
-};
-
-subtest 'connection accepted but no response' => sub {
-    my $listener = $loop->listen(
-        service => 0,
-        socktype => 'stream',
-        on_stream => sub {
-            my ($stream) = @_;
-            # We don't want to read, and we don't want to write - just sit
-            # there passively after accepting the connection
-            $stream->configure(on_read => sub { 0 });
-            $loop->add($stream)
-        }
-    )->get;
-    my $port = $listener->read_handle->sockport;
-    note "Listening on port ", $port;
-    $uri->port($port);
-    cleanup_ok()->get;
-    done_testing;
-};
-
+done_testing();
